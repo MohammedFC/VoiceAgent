@@ -70,7 +70,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.replace("/calls");
+    router.replace("/");
     router.refresh();
   }
 
@@ -92,7 +92,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.replace("/calls");
+    router.replace("/");
     router.refresh();
   }
 

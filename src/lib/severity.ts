@@ -1,5 +1,5 @@
 import { isUrgentFlagType } from "@/lib/alerts/sendUrgentAlert";
-import type { CallRow, FlagType, UrgencyLevel } from "@/lib/types/database";
+import type { CallRow, FlagType, KnownIssueStatus, UrgencyLevel } from "@/lib/types/database";
 
 export const URGENCY_RANK: Record<UrgencyLevel, number> = {
   routine: 0,
@@ -32,3 +32,13 @@ export function urgencyBadgeVariant(
   if (urgencyLevel === "same_day_action_needed") return "warning";
   return "outline";
 }
+
+export const KNOWN_ISSUE_STATUS_VARIANT: Record<
+  KnownIssueStatus,
+  "outline" | "warning" | "destructive" | "success"
+> = {
+  open: "destructive",
+  monitoring: "warning",
+  fix_deployed: "success",
+  closed: "outline",
+};

@@ -7,6 +7,7 @@ import {
   BarChart3,
   ClipboardCheck,
   ClipboardList,
+  LayoutDashboard,
   ListChecks,
   LogOut,
   Menu,
@@ -33,6 +34,7 @@ function navItems(pendingActionCount: number): {
   count?: number;
 }[] {
   return [
+    { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/calls", label: "Calls", icon: PhoneCall },
     {
       href: "/action-queue",
@@ -59,7 +61,8 @@ function NavLinks({
   return (
     <div className="flex flex-1 flex-col gap-1">
       {navItems(pendingActionCount).map((item) => {
-        const isActive = pathname.startsWith(item.href);
+        const isActive =
+          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         const Icon = item.icon;
         return (
           <Link
@@ -101,7 +104,9 @@ export function SidebarNav({ pendingActionCount = 0 }: { pendingActionCount?: nu
 
   return (
     <nav className="hidden h-full w-56 shrink-0 flex-col border-r bg-muted/20 p-4 md:flex">
-      <div className="mb-6 px-2 text-sm font-semibold">Out-of-Hours Call Log</div>
+      <Link href="/" className="mb-6 px-2 text-sm font-semibold">
+        Out-of-Hours Call Log
+      </Link>
       <NavLinks pathname={pathname} pendingActionCount={pendingActionCount} />
       <Button variant="ghost" size="sm" className="justify-start gap-2" onClick={handleSignOut}>
         <LogOut className="h-4 w-4" />
@@ -146,7 +151,9 @@ export function MobileTopNav({ pendingActionCount = 0 }: { pendingActionCount?: 
           </div>
         </SheetContent>
       </Sheet>
-      <span className="text-sm font-semibold">Out-of-Hours Call Log</span>
+      <Link href="/" className="text-sm font-semibold">
+        Out-of-Hours Call Log
+      </Link>
     </div>
   );
 }

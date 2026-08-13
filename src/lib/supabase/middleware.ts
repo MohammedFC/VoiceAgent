@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isPublicPath) {
     const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = "/calls";
+    homeUrl.pathname = "/";
     return NextResponse.redirect(homeUrl);
   }
 
