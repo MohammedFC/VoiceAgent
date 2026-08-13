@@ -44,7 +44,39 @@ export async function createCall(values: CallFormValues): Promise<InsertCallResu
   if (result.success) {
     revalidatePath("/calls");
     revalidatePath("/review-queue");
+    revalidatePath("/action-queue");
   }
 
   return result;
+}
+
+export interface MarkCallActionedInput {
+  callId: string;
+  actionNotes?: string;
+}
+
+export async function markCallActioned({ callId, actionNotes }: MarkCallActionedInput) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase
+    .from("calls")
+    .update({
+      action_completed_at: new Date().toISOString(),
+      action_completed_by: user?.email ?? user?.id ?? "unknown",
+      action_notes: actionNotes ?? null,
+    })
+    .eq("call_id", callId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/action-queue");
+  revalidatePath("/calls");
+  revalidatePath(`/calls/${callId}`);
+
+  return { success: true };
 }

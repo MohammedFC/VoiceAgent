@@ -62,13 +62,33 @@ export type CallRow = {
   raw_transcript: string;
   created_by: string | null;
   created_at: string;
+  action_completed_at: string | null;
+  action_completed_by: string | null;
+  action_notes: string | null;
 };
 
 export type CallInsert = Omit<
   CallRow,
-  "call_id" | "created_at" | "received_at" | "created_by"
+  | "call_id"
+  | "created_at"
+  | "received_at"
+  | "created_by"
+  | "action_completed_at"
+  | "action_completed_by"
+  | "action_notes"
 > &
-  Partial<Pick<CallRow, "call_id" | "created_at" | "received_at" | "created_by">>;
+  Partial<
+    Pick<
+      CallRow,
+      | "call_id"
+      | "created_at"
+      | "received_at"
+      | "created_by"
+      | "action_completed_at"
+      | "action_completed_by"
+      | "action_notes"
+    >
+  >;
 
 export type ReviewFlagRow = {
   flag_id: string;

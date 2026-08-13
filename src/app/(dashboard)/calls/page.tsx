@@ -14,7 +14,7 @@ import {
 import { CallFilters } from "@/components/calls/call-filters";
 import { FlagBadges } from "@/components/calls/flag-badges";
 import { CALL_REASON_CATEGORY_LABELS, URGENCY_LEVEL_LABELS } from "@/lib/labels";
-import { urgencyBadgeVariant } from "@/lib/severity";
+import { callNeedsAction, urgencyBadgeVariant } from "@/lib/severity";
 import type { CallReasonCategory, FlagType, UrgencyLevel } from "@/lib/types/database";
 import { createClient } from "@/lib/supabase/server";
 
@@ -90,13 +90,14 @@ export default async function CallsPage({ searchParams }: CallsPageProps) {
               <TableHead>Client</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Urgency</TableHead>
+              <TableHead>Action</TableHead>
               <TableHead>Flags</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {calls?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   No calls found.
                 </TableCell>
               </TableRow>
@@ -132,6 +133,15 @@ export default async function CallsPage({ searchParams }: CallsPageProps) {
                   <Badge variant={urgencyBadgeVariant(call.urgency_level)}>
                     {URGENCY_LEVEL_LABELS[call.urgency_level]}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  {call.action_completed_at ? (
+                    <Badge variant="success">Actioned</Badge>
+                  ) : callNeedsAction(call) ? (
+                    <Badge variant="warning">Needs action</Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <FlagBadges

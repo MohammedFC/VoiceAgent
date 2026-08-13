@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { CallActionPanel } from "@/components/calls/call-action-panel";
 import { TranscriptView } from "@/components/calls/transcript-view";
 import { FlagReviewPanel } from "@/components/review/flag-review-panel";
 import {
@@ -14,7 +15,7 @@ import {
   TRANSCRIPT_COMPLETENESS_LABELS,
   URGENCY_LEVEL_LABELS,
 } from "@/lib/labels";
-import { urgencyBadgeVariant } from "@/lib/severity";
+import { callNeedsAction, urgencyBadgeVariant } from "@/lib/severity";
 import { createClient } from "@/lib/supabase/server";
 
 interface CallDetailPageProps {
@@ -69,6 +70,17 @@ export default async function CallDetailPage({ params }: CallDetailPageProps) {
           {URGENCY_LEVEL_LABELS[call.urgency_level]}
         </Badge>
       </div>
+
+      {(callNeedsAction(call) || call.action_completed_at) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Follow-up action</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CallActionPanel call={call} />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

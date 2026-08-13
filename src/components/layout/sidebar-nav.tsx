@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
+  ClipboardCheck,
   ClipboardList,
   ListChecks,
   LogOut,
@@ -13,6 +14,7 @@ import {
   Wrench,
 } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -24,18 +26,39 @@ import {
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
-const NAV_ITEMS = [
-  { href: "/calls", label: "Calls", icon: PhoneCall },
-  { href: "/review-queue", label: "Review queue", icon: ListChecks },
-  { href: "/known-issues", label: "Known issues", icon: ClipboardList },
-  { href: "/config-changes", label: "Config changes", icon: Wrench },
-  { href: "/stats", label: "Stats", icon: BarChart3 },
-];
+function navItems(pendingActionCount: number): {
+  href: string;
+  label: string;
+  icon: typeof PhoneCall;
+  count?: number;
+}[] {
+  return [
+    { href: "/calls", label: "Calls", icon: PhoneCall },
+    {
+      href: "/action-queue",
+      label: "Action queue",
+      icon: ClipboardCheck,
+      count: pendingActionCount,
+    },
+    { href: "/review-queue", label: "Review queue", icon: ListChecks },
+    { href: "/known-issues", label: "Known issues", icon: ClipboardList },
+    { href: "/config-changes", label: "Config changes", icon: Wrench },
+    { href: "/stats", label: "Stats", icon: BarChart3 },
+  ];
+}
 
-function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+function NavLinks({
+  pathname,
+  pendingActionCount,
+  onNavigate,
+}: {
+  pathname: string;
+  pendingActionCount: number;
+  onNavigate?: () => void;
+}) {
   return (
     <div className="flex flex-1 flex-col gap-1">
-      {NAV_ITEMS.map((item) => {
+      {navItems(pendingActionCount).map((item) => {
         const isActive = pathname.startsWith(item.href);
         const Icon = item.icon;
         return (
@@ -49,7 +72,12 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
             )}
           >
             <Icon className="h-4 w-4" />
-            {item.label}
+            <span className="flex-1">{item.label}</span>
+            {item.count !== undefined && item.count > 0 && (
+              <Badge variant="warning" className="h-5 min-w-5 justify-center px-1">
+                {item.count}
+              </Badge>
+            )}
           </Link>
         );
       })}
@@ -67,14 +95,14 @@ function useSignOut() {
   };
 }
 
-export function SidebarNav() {
+export function SidebarNav({ pendingActionCount = 0 }: { pendingActionCount?: number }) {
   const pathname = usePathname();
   const handleSignOut = useSignOut();
 
   return (
     <nav className="hidden h-full w-56 shrink-0 flex-col border-r bg-muted/20 p-4 md:flex">
       <div className="mb-6 px-2 text-sm font-semibold">Out-of-Hours Call Log</div>
-      <NavLinks pathname={pathname} />
+      <NavLinks pathname={pathname} pendingActionCount={pendingActionCount} />
       <Button variant="ghost" size="sm" className="justify-start gap-2" onClick={handleSignOut}>
         <LogOut className="h-4 w-4" />
         Sign out
@@ -83,7 +111,7 @@ export function SidebarNav() {
   );
 }
 
-export function MobileTopNav() {
+export function MobileTopNav({ pendingActionCount = 0 }: { pendingActionCount?: number }) {
   const pathname = usePathname();
   const handleSignOut = useSignOut();
   const [open, setOpen] = useState(false);
@@ -101,7 +129,11 @@ export function MobileTopNav() {
             <SheetTitle>Out-of-Hours Call Log</SheetTitle>
           </SheetHeader>
           <div className="flex flex-1 flex-col p-4">
-            <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+            <NavLinks
+              pathname={pathname}
+              pendingActionCount={pendingActionCount}
+              onNavigate={() => setOpen(false)}
+            />
             <Button
               variant="ghost"
               size="sm"

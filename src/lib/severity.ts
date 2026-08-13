@@ -1,11 +1,20 @@
 import { isUrgentFlagType } from "@/lib/alerts/sendUrgentAlert";
-import type { FlagType, UrgencyLevel } from "@/lib/types/database";
+import type { CallRow, FlagType, UrgencyLevel } from "@/lib/types/database";
 
-const URGENCY_RANK: Record<UrgencyLevel, number> = {
+export const URGENCY_RANK: Record<UrgencyLevel, number> = {
   routine: 0,
   same_day_action_needed: 1,
   immediate_escalation: 2,
 };
+
+// A call needs real-world follow-up if a callback was requested or its
+// urgency is above routine. Derived rather than a separate stored flag,
+// so it can never drift out of sync with the data that determines it.
+export function callNeedsAction(
+  call: Pick<CallRow, "callback_requested" | "urgency_level">,
+): boolean {
+  return call.callback_requested || call.urgency_level !== "routine";
+}
 
 // Higher = needs attention sooner. Any unresolved urgent flag type
 // outranks urgency_level alone, since a fabricated summary or

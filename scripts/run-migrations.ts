@@ -50,14 +50,33 @@ async function main() {
   }
 
   try {
+    // Tracks which files have already run so re-running this script (e.g.
+    // after adding a new migration) doesn't replay ones already applied
+    // -- CREATE TYPE/CREATE TABLE etc. aren't idempotent, so re-applying
+    // an old file errors out even though nothing is actually wrong.
+    await client.query(
+      "create table if not exists schema_migrations (filename text primary key, applied_at timestamptz not null default now())",
+    );
+    const { rows: appliedRows } = await client.query<{ filename: string }>(
+      "select filename from schema_migrations",
+    );
+    const applied = new Set(appliedRows.map((r) => r.filename));
+    const pending = files.filter((f) => !applied.has(f));
+
+    if (pending.length === 0) {
+      console.log("No pending migrations -- database is already up to date.");
+      return;
+    }
+
     await client.query("begin");
-    for (const file of files) {
+    for (const file of pending) {
       const sql = readFileSync(join(MIGRATIONS_DIR, file), "utf8");
       console.log(`Applying ${file}...`);
       await client.query(sql);
+      await client.query("insert into schema_migrations (filename) values ($1)", [file]);
     }
     await client.query("commit");
-    console.log(`\nApplied ${files.length} migrations successfully.`);
+    console.log(`\nApplied ${pending.length} migration(s) successfully.`);
   } catch (error) {
     await client.query("rollback");
     const message = error instanceof Error ? error.message : String(error);
