@@ -18,8 +18,8 @@ export function severityRank(urgencyLevel: UrgencyLevel, flagTypes: FlagType[]):
 
 export function urgencyBadgeVariant(
   urgencyLevel: UrgencyLevel,
-): "outline" | "secondary" | "destructive" {
+): "outline" | "warning" | "destructive" {
   if (urgencyLevel === "immediate_escalation") return "destructive";
-  if (urgencyLevel === "same_day_action_needed") return "secondary";
+  if (urgencyLevel === "same_day_action_needed") return "warning";
   return "outline";
 }

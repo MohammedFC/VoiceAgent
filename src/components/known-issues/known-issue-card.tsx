@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KNOWN_ISSUE_STATUS_LABELS } from "@/lib/labels";
 import type { KnownIssueRow } from "@/lib/types/database";
 
-const STATUS_VARIANT: Record<KnownIssueRow["status"], "outline" | "secondary" | "destructive"> = {
+const STATUS_VARIANT: Record<KnownIssueRow["status"], "outline" | "warning" | "destructive" | "success"> = {
   open: "destructive",
-  monitoring: "secondary",
-  fix_deployed: "outline",
+  monitoring: "warning",
+  fix_deployed: "success",
   closed: "outline",
 };
 

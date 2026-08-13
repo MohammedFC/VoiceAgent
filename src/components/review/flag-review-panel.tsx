@@ -32,7 +32,7 @@ export function FlagReviewPanel({ flag }: { flag: ReviewFlagRow }) {
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3">
       <div className="flex items-center gap-2">
-        <Badge variant={resolved ? "outline" : isUrgentFlagType(flag.flag_type) ? "destructive" : "secondary"}>
+        <Badge variant={resolved ? "success" : isUrgentFlagType(flag.flag_type) ? "destructive" : "secondary"}>
           {FLAG_TYPE_LABELS[flag.flag_type]}
         </Badge>
         {resolved && <span className="text-xs text-muted-foreground">Reviewed by {flag.reviewed_by}</span>}

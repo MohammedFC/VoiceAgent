@@ -18,7 +18,7 @@ export function FlagBadges({ flags }: { flags: FlagBadgeData[] }) {
       {flags.map((flag, index) => (
         <Badge
           key={`${flag.flagType}-${index}`}
-          variant={flag.resolved ? "outline" : isUrgentFlagType(flag.flagType) ? "destructive" : "secondary"}
+          variant={flag.resolved ? "success" : isUrgentFlagType(flag.flagType) ? "destructive" : "secondary"}
         >
           {FLAG_TYPE_LABELS[flag.flagType]}
         </Badge>

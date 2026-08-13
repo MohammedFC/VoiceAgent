@@ -61,10 +61,11 @@ export default async function StatsPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="Total calls" value={calls?.length ?? 0} />
         <StatTile label="Total flags raised" value={flags?.length ?? 0} />
-        <StatTile label="Unresolved flags" value={unresolvedFlagCount} />
+        <StatTile label="Unresolved flags" value={unresolvedFlagCount} tone="warning" />
         <StatTile
           label="Immediate escalations"
           value={urgencyCounts.immediate_escalation ?? 0}
+          tone="destructive"
         />
       </div>
 

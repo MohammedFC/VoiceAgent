@@ -1,8 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-export function StatTile({ label, value }: { label: string; value: number | string }) {
+const TONE_BORDER = {
+  default: "border-l-primary",
+  warning: "border-l-warning",
+  destructive: "border-l-destructive",
+} as const;
+
+export function StatTile({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: number | string;
+  tone?: keyof typeof TONE_BORDER;
+}) {
   return (
-    <Card>
+    <Card className={cn("border-l-4", TONE_BORDER[tone])}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-normal text-muted-foreground">{label}</CardTitle>
       </CardHeader>
