@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { MobileTopNav, SidebarNav } from "@/components/layout/sidebar-nav";
 import { UrgentAlertBanner } from "@/components/layout/urgent-alert-banner";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,8 +19,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="flex flex-1">
       <SidebarNav />
       <div className="flex flex-1 flex-col overflow-hidden">
+        <MobileTopNav />
         <UrgentAlertBanner />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

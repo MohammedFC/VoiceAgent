@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
+import { ChevronLeft } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +50,15 @@ export default async function CallDetailPage({ params }: CallDetailPageProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <Link
+        href="/calls"
+        className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Back to calls
+      </Link>
+
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h1 className="text-2xl font-semibold">{call.client_name ?? call.phone_number}</h1>
           <p className="text-sm text-muted-foreground">

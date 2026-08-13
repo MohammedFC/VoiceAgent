@@ -20,7 +20,9 @@ export default async function KnownIssuesPage() {
             Recurring patterns identified from call reviews, tracked through to a config fix.
           </p>
         </div>
-        <Button render={<Link href="/known-issues/new" />}>New issue</Button>
+        <Button render={<Link href="/known-issues/new" />} nativeButton={false}>
+          New issue
+        </Button>
       </div>
 
       {error && <p className="text-sm text-destructive">Failed to load known issues: {error.message}</p>}

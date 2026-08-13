@@ -69,12 +69,16 @@ export default async function CallsPage({ searchParams }: CallsPageProps) {
             All out-of-hours calls handled by Kath, most recent first.
           </p>
         </div>
-        <Button render={<Link href="/calls/new" />}>New call</Button>
+        <Button render={<Link href="/calls/new" />} nativeButton={false}>
+          New call
+        </Button>
       </div>
 
       <CallFilters />
 
       {error && <p className="text-sm text-destructive">Failed to load calls: {error.message}</p>}
+
+      <p className="text-xs text-muted-foreground md:hidden">Swipe the table sideways to see more columns →</p>
 
       <div className="overflow-x-auto rounded-md border">
         <Table>

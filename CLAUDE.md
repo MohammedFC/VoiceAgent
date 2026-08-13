@@ -76,3 +76,13 @@ Same pattern for `DialogTrigger`/`DialogClose` etc. Also, base-ui `Select`'s `on
 
 ### Server Actions own all writes
 `src/actions/*.ts` (`calls.ts`, `review-flags.ts`, `known-issues.ts`, `config-changes.ts`) are the only place mutations happen. Dashboard pages under `src/app/(dashboard)/` are server components that fetch data directly via `src/lib/supabase/server.ts`; interactive bits (filters, mark-reviewed, forms) are small client components that call these actions and rely on `revalidatePath`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

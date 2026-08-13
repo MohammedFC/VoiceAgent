@@ -28,10 +28,14 @@ export default async function ConfigChangesPage() {
             Changelog of fixes made to Kath&apos;s prompt/config. Append-only audit record.
           </p>
         </div>
-        <Button render={<Link href="/config-changes/new" />}>Log change</Button>
+        <Button render={<Link href="/config-changes/new" />} nativeButton={false}>
+          Log change
+        </Button>
       </div>
 
       {error && <p className="text-sm text-destructive">Failed to load config changes: {error.message}</p>}
+
+      <p className="text-xs text-muted-foreground md:hidden">Swipe the table sideways to see more columns →</p>
 
       <div className="overflow-x-auto rounded-md border">
         <Table>

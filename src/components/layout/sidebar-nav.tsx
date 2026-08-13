@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -7,11 +8,19 @@ import {
   ClipboardList,
   ListChecks,
   LogOut,
+  Menu,
   PhoneCall,
   Wrench,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
@@ -23,43 +32,89 @@ const NAV_ITEMS = [
   { href: "/stats", label: "Stats", icon: BarChart3 },
 ];
 
-export function SidebarNav() {
-  const pathname = usePathname();
-  const router = useRouter();
+function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col gap-1">
+      {NAV_ITEMS.map((item) => {
+        const isActive = pathname.startsWith(item.href);
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-accent",
+              isActive ? "bg-accent font-medium" : "text-muted-foreground",
+            )}
+          >
+            <Icon className="h-4 w-4" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
 
-  async function handleSignOut() {
+function useSignOut() {
+  const router = useRouter();
+  return async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.replace("/login");
     router.refresh();
-  }
+  };
+}
+
+export function SidebarNav() {
+  const pathname = usePathname();
+  const handleSignOut = useSignOut();
 
   return (
-    <nav className="flex h-full w-56 shrink-0 flex-col border-r bg-muted/20 p-4">
+    <nav className="hidden h-full w-56 shrink-0 flex-col border-r bg-muted/20 p-4 md:flex">
       <div className="mb-6 px-2 text-sm font-semibold">Out-of-Hours Call Log</div>
-      <div className="flex flex-1 flex-col gap-1">
-        {NAV_ITEMS.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-accent",
-                isActive ? "bg-accent font-medium" : "text-muted-foreground",
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </div>
+      <NavLinks pathname={pathname} />
       <Button variant="ghost" size="sm" className="justify-start gap-2" onClick={handleSignOut}>
         <LogOut className="h-4 w-4" />
         Sign out
       </Button>
     </nav>
+  );
+}
+
+export function MobileTopNav() {
+  const pathname = usePathname();
+  const handleSignOut = useSignOut();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="flex h-12 shrink-0 items-center gap-2 border-b px-3 md:hidden">
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger
+          render={<Button variant="ghost" size="icon-sm" aria-label="Open navigation menu" />}
+        >
+          <Menu className="h-5 w-5" />
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64 p-0">
+          <SheetHeader className="border-b">
+            <SheetTitle>Out-of-Hours Call Log</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-1 flex-col p-4">
+            <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="justify-start gap-2"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <span className="text-sm font-semibold">Out-of-Hours Call Log</span>
+    </div>
   );
 }

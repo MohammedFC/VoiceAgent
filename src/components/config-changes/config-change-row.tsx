@@ -42,9 +42,11 @@ export function ConfigChangeRow({ change }: { change: AgentConfigChangeRow }) {
   return (
     <TableRow>
       <TableCell className="whitespace-nowrap align-top">{change.date}</TableCell>
-      <TableCell className="align-top">{change.changed_by}</TableCell>
-      <TableCell className="align-top">{change.description_of_change}</TableCell>
-      <TableCell className="align-top">
+      <TableCell className="align-top whitespace-nowrap">{change.changed_by}</TableCell>
+      <TableCell className="max-w-md min-w-64 align-top whitespace-normal">
+        {change.description_of_change}
+      </TableCell>
+      <TableCell className="max-w-56 align-top whitespace-normal">
         {reviewed ? (
           <span className="text-sm text-muted-foreground">
             Reviewed{change.effectiveness_notes ? `: ${change.effectiveness_notes}` : ""}

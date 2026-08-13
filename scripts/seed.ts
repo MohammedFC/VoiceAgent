@@ -8,6 +8,7 @@
 
 import { join } from "node:path";
 import { config as loadEnv } from "dotenv";
+import { Client } from "pg";
 
 import { runFlaggingRules } from "../src/lib/flagging/engine";
 import { isUrgentFlagType } from "../src/lib/alerts/sendUrgentAlert";
@@ -317,10 +318,34 @@ async function main() {
 
   if (RESET) {
     console.log("--reset passed: clearing existing seed tables (dev-only, destructive)...");
-    await admin.from("agent_config_changes").delete().neq("change_id", "00000000-0000-0000-0000-000000000000");
-    await admin.from("known_issues").delete().neq("issue_id", "00000000-0000-0000-0000-000000000000");
-    await admin.from("review_flags").delete().neq("flag_id", "00000000-0000-0000-0000-000000000000");
-    await admin.from("calls").delete().neq("call_id", "00000000-0000-0000-0000-000000000000");
+    // calls and agent_config_changes have BEFORE DELETE triggers that
+    // unconditionally reject deletes (audit-trail immutability, see
+    // supabase/migrations/0006_immutability_triggers.sql) -- a normal
+    // PostgREST .delete() on them fails silently unless you check the
+    // error. TRUNCATE doesn't fire row-level triggers, so it's the only
+    // way to actually reset those two tables; it needs a direct SQL
+    // connection rather than the admin REST client.
+    const dbUrl = process.env.SUPABASE_DB_URL;
+    if (!dbUrl) {
+      console.error(
+        "--reset requires SUPABASE_DB_URL in .env.local -- calls/agent_config_changes are delete-protected by DB triggers, so clearing them needs a direct SQL TRUNCATE, not the REST API.",
+      );
+      process.exit(1);
+    }
+
+    const pgClient = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
+    try {
+      await pgClient.connect();
+      await pgClient.query(
+        "truncate table agent_config_changes, known_issues, review_flags, calls restart identity cascade",
+      );
+    } catch (resetError) {
+      const message = resetError instanceof Error ? resetError.message : String(resetError);
+      console.error("Failed to reset tables:", message.split(dbUrl).join("[REDACTED]"));
+      process.exit(1);
+    } finally {
+      await pgClient.end();
+    }
   }
 
   let insertedCallCount = 0;
@@ -362,21 +387,23 @@ async function main() {
 
     if (flagResults.length === 0) continue;
 
-    const flagRows: ReviewFlagInsert[] = flagResults.map((flag) => ({
-      call_id: callId,
-      flag_type: flag.flagType,
-      reason: flag.reason,
-      // Mark the first flag on this call as already reviewed for a couple
-      // of calls, so the UI shows both open and resolved examples.
-      ...(preReviewedFlagTypes?.includes(flag.flagType)
-        ? {
-            resolved: true,
-            reviewed_by: "seed-script@jewelhomesupport.co.uk",
-            reviewed_at: new Date().toISOString(),
-            reviewer_notes: "Reviewed during seed data setup.",
-          }
-        : {}),
-    }));
+    // Every row must set the same keys: PostgREST bulk-inserts an array of
+    // objects as one statement using the union of keys across all rows, so
+    // a row missing a key (e.g. `resolved`) gets an explicit SQL NULL
+    // instead of falling back to the column default -- which breaks the
+    // NOT NULL constraint on any call whose flags mix reviewed/unreviewed.
+    const flagRows: ReviewFlagInsert[] = flagResults.map((flag) => {
+      const isPreReviewed = preReviewedFlagTypes?.includes(flag.flagType) ?? false;
+      return {
+        call_id: callId,
+        flag_type: flag.flagType,
+        reason: flag.reason,
+        resolved: isPreReviewed,
+        reviewed_by: isPreReviewed ? "seed-script@jewelhomesupport.co.uk" : null,
+        reviewed_at: isPreReviewed ? new Date().toISOString() : null,
+        reviewer_notes: isPreReviewed ? "Reviewed during seed data setup." : null,
+      };
+    });
 
     const { error: flagsError } = await admin.from("review_flags").insert(flagRows);
     if (flagsError) {
