@@ -10,6 +10,9 @@ Two integrations are deliberately stubbed, not wired to real external services:
 - **Email ingestion**: `POST /api/calls/ingest` accepts the existing 4-part email template shape (`callerName`, `phoneNumber`, `reasonOfCall`, `transcript`) but nothing polls the actual inbox yet.
 - **Urgent SMS/voice alerting**: `src/lib/alerts/sendUrgentAlert.ts` only logs and is picked up by an in-app banner; no real provider (e.g. Twilio) is wired in. Keep its signature stable when touching it.
 
+### Connected Supabase project
+Live project: "MohammedFC's Project" (ref `ejgyordxehdphrlkexuv`), region `eu-west-2` (London -- chosen for UK data residency since this holds vulnerable adults' health-adjacent data). This is a project identifier, not a credential; actual keys live in `.env.local` (gitignored) and are never committed.
+
 ## Commands
 
 ```bash
@@ -19,7 +22,7 @@ npm run typecheck     # tsc --noEmit
 npm run lint           # eslint
 npm run test           # vitest run -- flagging engine unit tests only
 npm run test -- tests/flagging/agentLoopDetected.test.ts   # single test file
-npm run migrate        # applies supabase/migrations/*.sql via SUPABASE_DB_URL (see below)
+npm run migrate        # applies pending supabase/migrations/*.sql via SUPABASE_DB_URL (see below)
 npm run seed            # inserts sample data via SUPABASE_SECRET_KEY, run through the real flagging engine
 npm run seed -- --reset  # same, but truncates calls/review_flags/known_issues/agent_config_changes first
 ```
@@ -37,10 +40,16 @@ Supabase uses the newer publishable/secret key naming, not the legacy anon/servi
 ## Architecture
 
 ### Data model and access control
-Four tables, defined across `supabase/migrations/0001` through `0007`: `calls`, `review_flags`, `known_issues`, `agent_config_changes`. Enum values are snake_case in Postgres; `src/lib/labels.ts` maps them to human-readable display labels.
+Four tables, defined across `supabase/migrations/0001` through `0008`: `calls`, `review_flags`, `known_issues`, `agent_config_changes`. Enum values are snake_case in Postgres; `src/lib/labels.ts` maps them to human-readable display labels. Migration `0008` added `calls.action_completed_at`/`action_completed_by`/`action_notes` (see "Action tracking" below).
 
-- **Immutability**: enforced by `BEFORE UPDATE/DELETE` triggers (migration `0006`), not application code or blanket RLS -- `calls.raw_transcript` can't change after insert, `agent_config_changes` core fields are frozen except `effectiveness_reviewed_at`/`effectiveness_notes`, and neither table allows deletes. This holds even against direct SQL, which is the point.
-- **Access control**: RLS (migration `0007`) grants full select/insert/update `to authenticated` on all four tables, nothing to `anon`. There are no role tiers -- every Supabase Auth user is "staff". There is no `/signup` route anywhere in the app; that omission (not a check) is what enforces "no public signup". Staff accounts are created manually via the Supabase dashboard.
+- **Immutability**: enforced by `BEFORE UPDATE/DELETE` triggers (migration `0006`), not application code or blanket RLS -- `calls.raw_transcript` can't change after insert, `agent_config_changes` core fields are frozen except `effectiveness_reviewed_at`/`effectiveness_notes`, and neither table allows deletes. This holds even against direct SQL, which is the point. `scripts/seed.ts --reset` works around this with a direct `TRUNCATE` (which doesn't fire row-level triggers) rather than PostgREST deletes.
+- **Access control**: RLS (migration `0007`) grants full select/insert/update `to authenticated` on all four tables, nothing to `anon`. There are no role tiers -- every Supabase Auth user is "staff". There is no `/signup` route anywhere in the app; that omission (not a check) is what enforces "no public signup". Staff accounts are created manually via the Supabase dashboard, or by admin API (see `scripts/invite-staff-user.ts`).
+
+### Migrations are tracked, not just replayed
+`scripts/run-migrations.ts` records each applied file in a `schema_migrations` table and only runs files not yet in it. Don't hand-edit that table or delete already-applied migration files -- re-running `npm run migrate` should always be safe (no pending migrations = no-op).
+
+### Action tracking (calls needing real-world follow-up)
+Separate from `review_flags` (which checks whether Kath behaved correctly, not whether a human follow-up happened). `src/lib/severity.ts::callNeedsAction()` derives "needs action" from `callback_requested`/`urgency_level` -- there's no separate manually-set flag, so it can't drift out of sync. `src/actions/calls.ts::markCallActioned()` records who/when/notes. Surfaced in: the `/action-queue` page, a live count badge in the sidebar (fetched server-side in `src/app/(dashboard)/layout.tsx`), an Action column on `/calls`, and a "Follow-up action" card on the call detail page.
 
 ### The flagging engine is intentionally framework-free
 `src/lib/flagging/` has zero Next.js/Supabase imports. `engine.ts::runFlaggingRules(call)` runs all 7 rules (one file each under `rules/`) and returns the triggered ones. This is what makes `npm run test` possible without a database, and it's why `scripts/seed.ts` imports the engine directly rather than hand-writing flag rows -- seed data and production behavior are guaranteed to match.
@@ -76,6 +85,20 @@ Same pattern for `DialogTrigger`/`DialogClose` etc. Also, base-ui `Select`'s `on
 
 ### Server Actions own all writes
 `src/actions/*.ts` (`calls.ts`, `review-flags.ts`, `known-issues.ts`, `config-changes.ts`) are the only place mutations happen. Dashboard pages under `src/app/(dashboard)/` are server components that fetch data directly via `src/lib/supabase/server.ts`; interactive bits (filters, mark-reviewed, forms) are small client components that call these actions and rely on `revalidatePath`.
+
+### Home page is `/`, inside the `(dashboard)` route group
+`src/app/(dashboard)/page.tsx` (not a top-level `src/app/page.tsx`) is the home dashboard, so it gets the shared sidebar/layout. It's an overview -- KPI cards, needs-action/needs-review previews, a trend chart, known issues, recent calls -- deliberately distinct from `/stats` (cumulative all-time breakdowns). Login redirects here (both the login form's `router.replace` and the middleware's authenticated-hits-`/login` case), not to `/calls`. `src/components/layout/sidebar-nav.tsx`'s active-link check special-cases `href === "/"` to an exact match -- `pathname.startsWith("/")` is true for every route and would otherwise highlight "Dashboard" everywhere.
+
+### Auth: recovery/invite links use the implicit flow, not PKCE
+`@supabase/ssr`'s `createBrowserClient` hard-codes `flowType: "pkce"`, which only auto-detects a `?code=` query param. Supabase's admin-generated recovery/invite links (`supabase.auth.admin.generateLink`) send session tokens as a `#access_token=...` URL fragment instead, which the PKCE-configured client silently ignores. `src/app/(auth)/login/page.tsx` parses that fragment itself and calls `supabase.auth.setSession()` directly rather than relying on automatic URL detection. If password-reset/invite links stop working, check here first.
+
+### Design tokens and severity color system
+`src/app/globals.css` defines warm off-white/stone neutrals (background, borders, muted text) with teal as the *only* accent color (buttons, badges, focus rings, links, `--chart-1`) -- don't reintroduce teal/cyan into neutral surface tokens, that's the specific thing that got corrected after looking too blue. Headings use Figtree (`--font-heading`), body text uses Noto Sans (`--font-sans`); both are wired through `@theme inline` indirection in `globals.css` -- if `--font-sans`/`--font-heading` ever stop resolving to a real `next/font` variable, headings will silently fall back to the browser's default serif (this happened once; see git history for `globals.css`).
+
+`src/components/ui/badge.tsx` has `warning` (amber) and `success` (green) variants alongside the default `destructive`/`secondary`/`outline`, forming a 3-tier traffic light used for urgency (`src/lib/severity.ts::urgencyBadgeVariant`) and known-issue status (`KNOWN_ISSUE_STATUS_VARIANT`, same file).
+
+### Issue before outcome -- an ordering convention, not just a style
+Both `FlagReviewPanel` and `CallActionPanel` always render the reason something was flagged *before* the resolved-state outcome (who reviewed/actioned it, when) -- never let a "reviewed by"/"actioned by" line lead ahead of the reason text; that ordering was explicitly requested and regressed once already. The call detail page (`src/app/(dashboard)/calls/[callId]/page.tsx`) follows the same principle at the page level: Flags and Raw transcript (the issue + evidence) render first, right after the header, ahead of Follow-up action, Call details, and AI summary.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
