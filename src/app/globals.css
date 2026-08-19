@@ -51,68 +51,68 @@
 }
 
 /*
- * Palette sourced from ui-ux-pro-max's "Healthcare App" color result
- * ("Calm cyan + health green" -- domain: color, query: "healthcare
- * service trustworthy warm light") and its "Executive Dashboard" style
- * result, which recommends a green/amber/red status system for KPI and
- * severity indicators (domain: style, query: "clean minimal professional
- * light warm"). --warning/--success extend the original destructive-only
- * severity system to a full 3-tier traffic light: routine (neutral) ->
- * same-day action (amber) -> immediate escalation (red).
+ * Warm neutral surfaces + a single teal accent (buttons, badges, focus
+ * rings, links) -- the original "Healthcare App" palette used cyan for
+ * both the accent *and* every neutral surface, which read as an all-over
+ * blue page rather than "warm". Teal now only appears where it's doing
+ * accent work; backgrounds/borders/muted text are warm off-white/stone
+ * instead. --warning/--success extend the destructive-only severity
+ * system to a full 3-tier traffic light: routine (neutral) -> same-day
+ * action (amber) -> immediate escalation (red).
  */
 :root {
-  --background: #ECFEFF;
-  --foreground: #164E63;
+  --background: #FAF7F2;
+  --foreground: #2B2521;
   --card: #FFFFFF;
-  --card-foreground: #164E63;
+  --card-foreground: #2B2521;
   --popover: #FFFFFF;
-  --popover-foreground: #164E63;
+  --popover-foreground: #2B2521;
   --primary: #0891B2;
   --primary-foreground: #FFFFFF;
-  --secondary: #E0F2FE;
-  --secondary-foreground: #164E63;
-  --muted: #E8F1F6;
-  --muted-foreground: #64748B;
-  --accent: #CFFAFE;
+  --secondary: #F1EBE2;
+  --secondary-foreground: #2B2521;
+  --muted: #F3EEE7;
+  --muted-foreground: #7A6F63;
+  --accent: #DEF2F1;
   --accent-foreground: #0E7490;
   --destructive: #DC2626;
   --warning: #B45309;
   --success: #15803D;
-  --border: #A5F3FC;
-  --input: #A5F3FC;
+  --border: #E8E0D5;
+  --input: #E8E0D5;
   --ring: #0891B2;
   --chart-1: #0891B2;
   --chart-2: #F59E0B;
   --chart-3: #059669;
-  --chart-4: #64748B;
-  --chart-5: #164E63;
+  --chart-4: #7A6F63;
+  --chart-5: #2B2521;
   --radius: 0.75rem;
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #164E63;
+  --sidebar-foreground: #2B2521;
   --sidebar-primary: #0891B2;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #CFFAFE;
+  --sidebar-accent: #DEF2F1;
   --sidebar-accent-foreground: #0E7490;
-  --sidebar-border: #E2E8F0;
+  --sidebar-border: #EEE7DA;
   --sidebar-ring: #0891B2;
   --font-sans: var(--font-noto-sans);
   --font-heading: var(--font-figtree);
 }
 
 .dark {
-  --background: #0B1D26;
-  --foreground: #ECFEFF;
-  --card: #10293580;
-  --card-foreground: #ECFEFF;
-  --popover: #102935;
-  --popover-foreground: #ECFEFF;
+  --background: #1C1815;
+  --foreground: #F5F1EA;
+  --card: #26211D;
+  --card-foreground: #F5F1EA;
+  --popover: #26211D;
+  --popover-foreground: #F5F1EA;
   --primary: #22D3EE;
-  --primary-foreground: #0B1D26;
-  --secondary: #164E63;
-  --secondary-foreground: #ECFEFF;
-  --muted: #164E63;
-  --muted-foreground: #94D2E0;
-  --accent: #164E63;
+  --primary-foreground: #1C1815;
+  --secondary: #322C26;
+  --secondary-foreground: #F5F1EA;
+  --muted: #322C26;
+  --muted-foreground: #B3A89B;
+  --accent: #1F3A3D;
   --accent-foreground: #67E8F9;
   --destructive: #F87171;
   --warning: #FBBF24;
@@ -123,13 +123,13 @@
   --chart-1: #22D3EE;
   --chart-2: #FBBF24;
   --chart-3: #4ADE80;
-  --chart-4: #94A3B8;
-  --chart-5: #ECFEFF;
-  --sidebar: #102935;
-  --sidebar-foreground: #ECFEFF;
+  --chart-4: #B3A89B;
+  --chart-5: #F5F1EA;
+  --sidebar: #26211D;
+  --sidebar-foreground: #F5F1EA;
   --sidebar-primary: #22D3EE;
-  --sidebar-primary-foreground: #0B1D26;
-  --sidebar-accent: #164E63;
+  --sidebar-primary-foreground: #1C1815;
+  --sidebar-accent: #1F3A3D;
   --sidebar-accent-foreground: #67E8F9;
   --sidebar-border: #ffffff1a;
   --sidebar-ring: #22D3EE;

@@ -71,6 +71,27 @@ export default async function CallDetailPage({ params }: CallDetailPageProps) {
         </Badge>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Flags ({flags.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {flags.length === 0 && <p className="text-sm text-muted-foreground">No flags raised.</p>}
+          {flags.map((flag) => (
+            <FlagReviewPanel key={flag.flag_id} flag={flag} />
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Raw transcript</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TranscriptView transcript={call.raw_transcript} />
+        </CardContent>
+      </Card>
+
       {(callNeedsAction(call) || call.action_completed_at) && (
         <Card>
           <CardHeader>
@@ -124,27 +145,6 @@ export default async function CallDetailPage({ params }: CallDetailPageProps) {
           </CardContent>
         </Card>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Flags ({flags.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {flags.length === 0 && <p className="text-sm text-muted-foreground">No flags raised.</p>}
-          {flags.map((flag) => (
-            <FlagReviewPanel key={flag.flag_id} flag={flag} />
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Raw transcript</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TranscriptView transcript={call.raw_transcript} />
-        </CardContent>
-      </Card>
     </div>
   );
 }
